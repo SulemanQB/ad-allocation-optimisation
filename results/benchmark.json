@@ -1,0 +1,15 @@
+{
+  "greedy_revenue": 89164.09,
+  "mip_revenue": 165623.57,
+  "revenue_gain": 76459.47,
+  "revenue_gain_pct": 85.75,
+  "greedy_fill_rate": 1.2679,
+  "mip_fill_rate": 1.9873,
+  "mip_status": "OPTIMAL",
+  "mip_wall_seconds": 0.4539,
+  "n_slots": 40,
+  "n_campaigns": 12,
+  "n_greedy_assignments": 35,
+  "n_mip_assignments": 79,
+  "note": "Synthetic instance only; not from any commercial dataset."
+}
