@@ -1,4 +1,6 @@
 ortools>=9.10
+gurobipy>=11.0
 pandas>=2.0
 numpy>=1.26
+matplotlib>=3.7
 pytest>=8.0

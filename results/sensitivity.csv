@@ -1,0 +1,13 @@
+sweep,value,factor,status,objective,method,revenue,campaigns_at_target,pct_campaigns_at_target,unsold_ad_units,total_ad_units,unsold_pct,assignments
+shortfall_penalty,0.0,0.0,OPTIMAL,165713.36,ortools_cbc,165713.36,8,66.7,0,79,0.0,79
+shortfall_penalty,0.001,0.5,OPTIMAL,164935.92,ortools_cbc,165623.57,8,66.7,0,79,0.0,79
+shortfall_penalty,0.002,1.0,OPTIMAL,164248.28,ortools_cbc,165623.57,8,66.7,0,79,0.0,79
+shortfall_penalty,0.004,2.0,OPTIMAL,163021.62,ortools_cbc,165367.14,8,66.7,0,79,0.0,79
+shortfall_penalty,0.01,5.0,OPTIMAL,160209.44,ortools_cbc,163689.05,10,83.3,0,79,0.0,79
+shortfall_penalty,0.02,10.0,OPTIMAL,159470.44,ortools_cbc,159662.96,10,83.3,0,79,0.0,79
+shortfall_penalty,0.05,25.0,OPTIMAL,159370.62,ortools_cbc,159370.62,12,100.0,0,79,0.0,79
+slot_capacity,71.0,0.9,OPTIMAL,150501.15,ortools_cbc,152067.24,8,66.7,0,71,0.0,71
+slot_capacity,75.0,0.95,OPTIMAL,156899.62,ortools_cbc,158274.91,8,66.7,0,75,0.0,75
+slot_capacity,79.0,1.0,OPTIMAL,164248.28,ortools_cbc,165623.57,8,66.7,0,79,0.0,79
+slot_capacity,83.0,1.05,OPTIMAL,171230.89,ortools_cbc,172554.19,8,66.7,0,83,0.0,83
+slot_capacity,87.0,1.1,OPTIMAL,176861.81,ortools_cbc,178199.32,8,66.7,0,87,0.0,87

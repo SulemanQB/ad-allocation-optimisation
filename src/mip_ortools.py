@@ -20,7 +20,20 @@ class MipSolveInfo:
     mip_gap: float | None
 
 
-def solve_mip(instance: Instance, time_limit_s: float = 30.0) -> tuple[AllocationResult, MipSolveInfo]:
+DEFAULT_PENALTY = 0.002  # $ per unmet impression
+
+
+def solve_mip(
+    instance: Instance,
+    time_limit_s: float = 30.0,
+    penalty: float = DEFAULT_PENALTY,
+    hard_target: bool = False,
+) -> tuple[AllocationResult, MipSolveInfo]:
+    """Solve the allocation MIP with CBC.
+
+    hard_target=True forces every campaign to reach its impression target
+    (shortfall fixed to zero); the model may then be infeasible.
+    """
     slots = instance.slots.set_index("slot_id")
     campaigns = instance.campaigns.set_index("campaign_id")
     rates = instance.rates[instance.rates["eligible"] == 1].copy()
@@ -33,7 +46,7 @@ def solve_mip(instance: Instance, time_limit_s: float = 30.0) -> tuple[Allocatio
     )
 
     solver = pywraplp.Solver.CreateSolver("CBC")
-    if solver is None:
+    if solver is None:  # pragma: no cover
         raise RuntimeError("CBC solver unavailable")
     solver.SetTimeLimit(int(time_limit_s * 1000))
 
@@ -58,7 +71,8 @@ def solve_mip(instance: Instance, time_limit_s: float = 30.0) -> tuple[Allocatio
             if (sid, cid) in x:
                 delivered.append(x[(sid, cid)] * float(slots.loc[sid, "impressions"]))
         delivered_expr = sum(delivered) if delivered else 0
-        sf = solver.NumVar(0, float(camp["target_impressions"]), f"shortfall_{cid}")
+        sf_ub = 0.0 if hard_target else float(camp["target_impressions"])
+        sf = solver.NumVar(0, sf_ub, f"shortfall_{cid}")
         shortfall[cid] = sf
         solver.Add(delivered_expr + sf >= float(camp["target_impressions"]))
         # Pacing: campaign cannot take more than pacing_max_share of network impressions
@@ -66,7 +80,6 @@ def solve_mip(instance: Instance, time_limit_s: float = 30.0) -> tuple[Allocatio
 
     revenue = sum(x[k] * float(rates.set_index(["slot_id", "campaign_id"]).loc[k, "expected_revenue"]) for k in x)
     # Prefer revenue; lightly penalise unmet demand so targets matter
-    penalty = 0.002  # $ per unmet impression
     objective = revenue - penalty * sum(shortfall.values())
     solver.Maximize(objective)
 
