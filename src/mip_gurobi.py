@@ -22,8 +22,63 @@ except ImportError:  # pragma: no cover
     GRB = None
 
 
+# Missing licence, and the size-limited pip licence refusing a model.
+_LICENCE_ERROR_CODES = (10009, 10010)
+
+
+def is_gurobi_licence_error(exc: BaseException) -> bool:
+    """True when Gurobi has no usable licence.
+
+    Covers a missing licence file and the size-limited pip licence
+    (2000 variables / 2000 linear constraints) rejecting a model.
+    """
+    if gp is None or not isinstance(exc, gp.GurobiError):
+        return False
+    errno = getattr(exc, "errno", None)
+    if errno in _LICENCE_ERROR_CODES:
+        return True
+    if GRB is not None and errno is not None:
+        named = {
+            getattr(GRB, "ERROR_NO_LICENSE", None),
+            getattr(GRB, "ERROR_SIZE_LIMIT_EXCEEDED", None),
+        }
+        if errno in named:
+            return True
+    text = str(exc).lower()
+    return "licen" in text or "size-limited" in text or "size limited" in text
+
+
 def gurobi_available() -> bool:
-    return gp is not None
+    """Return whether gurobipy can obtain a licence and solve a tiny model.
+
+    The pip package ships a size-limited licence, which is enough for the
+    bundled instance. A missing or rejected licence counts as unavailable
+    so callers can skip instead of failing.
+    """
+    if gp is None or GRB is None:
+        return False
+    env = None
+    model = None
+    try:
+        env = gp.Env(empty=True)
+        env.setParam("OutputFlag", 0)
+        env.start()
+        model = gp.Model(env=env)
+        model.Params.OutputFlag = 0
+        var = model.addVar(vtype=GRB.BINARY, name="probe")
+        model.setObjective(var, GRB.MAXIMIZE)
+        model.optimize()
+        return bool(model.SolCount) and model.Status == GRB.OPTIMAL
+    except Exception:
+        return False
+    finally:
+        for obj in (model, env):
+            if obj is None:
+                continue
+            try:
+                obj.dispose()
+            except Exception:
+                pass
 
 
 def solve_mip_gurobi(

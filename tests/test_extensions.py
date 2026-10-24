@@ -3,7 +3,7 @@ import pytest
 from src.generate_instance import generate_instance
 from src.greedy import greedy_allocate
 from src.metrics import allocation_metrics
-from src.mip_gurobi import gurobi_available, solve_mip_gurobi
+from src.mip_gurobi import gurobi_available, is_gurobi_licence_error, solve_mip_gurobi
 from src.mip_ortools import solve_mip
 from src.sensitivity import run_sensitivity, scale_capacity
 
@@ -50,10 +50,40 @@ def test_sensitivity_monotone_in_capacity():
     assert (cap["objective"].diff().dropna() >= -1e-6).all()
 
 
-@pytest.mark.skipif(not gurobi_available(), reason="gurobipy not installed")
+def test_gurobi_licence_errors_are_recognised():
+    gurobipy = pytest.importorskip("gurobipy")
+    from gurobipy import GRB
+
+    assert is_gurobi_licence_error(
+        gurobipy.GurobiError(GRB.ERROR_NO_LICENSE, "No Gurobi license found")
+    )
+    assert is_gurobi_licence_error(
+        gurobipy.GurobiError(
+            GRB.ERROR_SIZE_LIMIT_EXCEEDED,
+            "Model too large for size-limited license",
+        )
+    )
+    assert not is_gurobi_licence_error(
+        gurobipy.GurobiError(GRB.ERROR_NUMERIC, "Numeric error encountered")
+    )
+    assert not is_gurobi_licence_error(RuntimeError("No Gurobi license found"))
+
+
+def test_gurobi_unavailable_when_licence_file_is_missing(monkeypatch, tmp_path):
+    pytest.importorskip("gurobipy")
+    monkeypatch.setenv("GRB_LICENSE_FILE", str(tmp_path / "missing.lic"))
+    assert gurobi_available() is False
+
+
+@pytest.mark.skipif(not gurobi_available(), reason="Gurobi licence unavailable")
 def test_gurobi_matches_cbc_objective():
     inst = generate_instance()
     _, cbc = solve_mip(inst)
-    _, grb = solve_mip_gurobi(inst)
+    try:
+        _, grb = solve_mip_gurobi(inst)
+    except Exception as exc:
+        if is_gurobi_licence_error(exc):
+            pytest.skip("Gurobi licence unavailable")
+        raise
     assert grb.status == "OPTIMAL"
     assert grb.objective == pytest.approx(cbc.objective, rel=1e-3)

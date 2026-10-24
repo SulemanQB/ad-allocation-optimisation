@@ -1,5 +1,7 @@
 # Ad-slot allocation optimisation
 
+[![CI](https://github.com/SulemanQB/ad-allocation-optimisation/actions/workflows/ci.yml/badge.svg)](https://github.com/SulemanQB/ad-allocation-optimisation/actions/workflows/ci.yml)
+
 A small media / ad-yield inventory allocation demo: a mixed-integer program (MIP) that allocates ad inventory across campaigns under capacity, pacing and demand targets, solved with both Google OR-Tools (CBC) and Gurobi, and compared against greedy baselines.
 
 Synthetic data only; not from any commercial dataset. All numbers below come from the bundled synthetic generator.
@@ -41,6 +43,8 @@ pip install -r requirements.txt
 python -m src.run_benchmark      # writes results/benchmark.json, sensitivity.csv/png
 pytest -q
 ```
+
+GitHub Actions runs that install, a lightweight lint of `src` and `tests`, and `pytest` on every push and pull request. Tests use OR-Tools CBC. The Gurobi comparison is skipped when no Gurobi licence can be started (the pip licence is size-limited).
 
 ## Results (seed 42, 40 slots, 12 campaigns, 79 ad units)
 

@@ -1,0 +1,5 @@
+# Lightweight lint used in CI: pyflakes, plus syntax and runtime errors.
+target-version = "py310"
+
+[lint]
+select = ["F", "E9"]
